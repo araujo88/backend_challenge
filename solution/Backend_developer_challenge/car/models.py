@@ -61,7 +61,7 @@ class Tyre(models.Model):
     id = models.UUIDField(default=uuid.uuid4, unique=True,
                           primary_key=True, editable=False)
     created = models.DateTimeField(auto_now_add=True)
-    degration = models.FloatField(default=0)
+    degradation = models.FloatField(default=0)
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
@@ -73,14 +73,14 @@ class Tyre(models.Model):
             pass
 
     def __str__(self):
-        return f'Tyre {self.id} - degradation: {self.degration}%'
+        return f'Tyre {self.id} - degradation: {self.degradation}%'
 
     def trip(self, distance):
-        if (self.degration + distance / 3 <= 100):
-            self.degration += distance / 3
+        if (self.degradation + distance / 3 <= 100):
+            self.degradation += distance / 3
         else:
-            self.degration = 100
-        if (self.degration == 100):
+            self.degradation = 100
+        if (self.degradation == 100):
             self.delete()
         else:
             self.save()
