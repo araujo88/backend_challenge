@@ -50,28 +50,29 @@ def getCarStatus(request, pk):
 def trip(request, pk):
     car = Car.objects.get(id=pk)
     data = request.data
-    distance = data['distance']
-    car.num_tyres = Tyre.objects.filter(id=pk).count()
+    distance = float(data['distance'])
+    car.num_tyres = Tyre.objects.filter(car=car).count()
 
     if (car.num_tyres == 4):
-        if (car.gas - distance / 8 <= 0):
-            car.gas = 0
-            car.current_gas = 0
+        if (car.gas - distance / 8. <= 0):
+            car.gas = 0.
+            car.current_gas = 0.
         else:
-            car.gas -= distance / 8
-            car.current_gas = 100 * (car.gas / car.capacity)
+            car.gas -= distance / 8.
+            car.current_gas = 100. * (car.gas / car.capacity)
         car.save()
 
-        tyres = Tyre.objects.filter(car=car).all()
+        tyres = Tyre.objects.filter(car=car)
         for tyre in tyres:
-            if (tyre.degradation + distance / 3 <= 100):
-                tyre.degradation += distance / 3
-            else:
-                tyre.degradation = 100
             if (tyre.degradation == 100):
                 tyre.delete()
-            else:
+                break
+            if (tyre.degradation + distance / 3. <= 100):
+                tyre.degradation += distance / 3.
                 tyre.save()
+            else:
+                tyre.degradation = 100
+            tyre.save()
 
     serializer = CarSerializer(car, many=False)
     return Response(serializer.data)
@@ -81,13 +82,15 @@ def trip(request, pk):
 def refuel(request, pk):
     car = Car.objects.get(id=pk)
     data = request.data
-    gas = data['gas']
+    gas = float(data['gas'])
 
-    if (car.gas + gas >= car.capacity):
-        car.gas = car.capacity
-    else:
-        car.gas += gas
-    car.save()
+    if (car.current_gas < 5.):
+        if (car.gas + gas >= car.capacity):
+            car.gas = car.capacity
+        else:
+            car.gas += gas
+        car.current_gas = 100 * (car.gas / car.capacity)
+        car.save()
 
     serializer = CarSerializer(car, many=False)
     return Response(serializer.data)
@@ -96,12 +99,14 @@ def refuel(request, pk):
 @api_view(['POST'])
 def maintenance(request, pk):
     car = Car.objects.get(id=pk)
-    tyres = Tyre.objects.filter(car=car).all()
+    tyres = Tyre.objects.filter(car=car)
+
     for tyre in tyres:
-        if (tyre.degradation > 94):
+        if (tyre.degradation > 94.):
             tyre.delete()
             new_tyre = Tyre(car=car)
             new_tyre.save()
+            car.num_tyres += 1
             car.save()
 
     serializer = CarSerializer(car, many=False)
@@ -123,5 +128,7 @@ def createTyre(request):
     tyre = Tyre()
     tyre.car = Car.objects.get(id=pk)
     tyre.save()
+    tyre.car.num_tyres += 1
+    tyre.car.save()
     serializer = TyreSerializer(tyre, many=False)
     return Response(serializer.data)
