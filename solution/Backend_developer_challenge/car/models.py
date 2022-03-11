@@ -30,32 +30,6 @@ class Car(models.Model):
         self.num_tyres = Tyre.objects.filter(car_id=self.id).count()
         return f'{self.num_tyres} tyres'
 
-    def trip(self, distance):
-        self.num_tyres = Tyre.objects.filter(car_id=self.id).count()
-        if (self.num_tyres == 4):
-            if (self.gas - distance / 8 <= 0):
-                self.gas = 0
-                self.current_gas = 0
-            else:
-                self.gas -= distance / 8
-                self.current_gas = 100 * (self.gas / self.capacity)
-            self.save()
-
-    def refuel(self, gas):
-        if (self.gas + gas >= self.capacity):
-            self.gas = self.capacity
-        else:
-            self.gas += gas
-        self.save()
-
-    def maintenance(self, tyre_id):
-        tyre = Tyre.objects.get(id=tyre_id)
-        if (tyre.degradation > 94):
-            tyre.delete()
-            new_tyre = Tyre(car=self)
-            new_tyre.save()
-            self.save()
-
 
 class Tyre(models.Model):
     id = models.UUIDField(default=uuid.uuid4, unique=True,
