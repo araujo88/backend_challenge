@@ -62,6 +62,17 @@ def trip(request, pk):
             car.current_gas = 100 * (car.gas / car.capacity)
         car.save()
 
+        tyres = Tyre.objects.filter(car=car).all()
+        for tyre in tyres:
+            if (tyre.degradation + distance / 3 <= 100):
+                tyre.degradation += distance / 3
+            else:
+                tyre.degradation = 100
+            if (tyre.degradation == 100):
+                tyre.delete()
+            else:
+                tyre.save()
+
     serializer = CarSerializer(car, many=False)
     return Response(serializer.data)
 

@@ -48,13 +48,3 @@ class Tyre(models.Model):
 
     def __str__(self):
         return f'Tyre {self.id} - degradation: {self.degradation}%'
-
-    def trip(self, distance):
-        if (self.degradation + distance / 3 <= 100):
-            self.degradation += distance / 3
-        else:
-            self.degradation = 100
-        if (self.degradation == 100):
-            self.delete()
-        else:
-            self.save()
